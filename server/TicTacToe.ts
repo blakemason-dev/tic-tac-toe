@@ -1,7 +1,8 @@
 import { Room } from 'colyseus';
+import TicTacToeState from './TicTacToeState';
 
-export default class TicTacToe extends Room {
+export default class TicTacToe extends Room<TicTacToeState> {
     onCreate() {
-        console.log('created');
+        this.setState(new TicTacToeState());
     }
 }
