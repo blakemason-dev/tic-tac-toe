@@ -1,8 +1,8 @@
 import { Schema, ArraySchema, type } from "@colyseus/schema";
 
-import ITicTacToe from '../types/ITicTacToeState';
+import ITicTacToeState from '../types/ITicTacToeState';
 
-export default class TicTacToeState extends Schema implements ITicTacToe {
+export default class TicTacToeState extends Schema implements ITicTacToeState {
     @type(['number']) 
     board: ArraySchema<number>;
 

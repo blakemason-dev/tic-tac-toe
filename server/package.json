@@ -11,7 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@colyseus/command": "^0.2.1",
     "@colyseus/monitor": "^0.14.22",
+    "@colyseus/schema": "^1.0.44",
     "@types/express": "^4.17.15",
     "colyseus": "^0.14.24",
     "cors": "^2.8.5",
