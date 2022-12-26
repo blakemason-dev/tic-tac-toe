@@ -6,11 +6,8 @@ import { EventEmitter } from 'events';
 import ITicTacToeState from '../../../../types/ITicTacToeState';
 import { Message } from '../../../../types/messages';
 
-// class CustomEventEmitter extends EventEmitter {};
-
 export default class Server {
     private client: Client;
-    // private events: Phaser.Events.EventEmitter;
 
     private eventEmitter = new EventEmitter();
 
@@ -18,7 +15,6 @@ export default class Server {
 
     constructor () {
         this.client = new Client('ws://localhost:2567');
-        // this.events = new Phaser.Events.EventEmitter();
     }
 
     async join() {
@@ -30,6 +26,10 @@ export default class Server {
         
         this.room.onStateChange(state => {
             this.eventEmitter.emit("on-state-changed", state);
+        });
+
+        this.room.onMessage('victory', (msg) => {
+
         });
     }
 
@@ -45,6 +45,40 @@ export default class Server {
 
     onStateChanged(cb: (state: ITicTacToeState) => void) {
         this.eventEmitter.on("on-state-changed", cb);
+    }
+
+    isMyTurn() {
+        return this.room?.sessionId !== this.room?.state.lastMoveSessionId;
+    }
+
+    getMyMarker() {
+        if (this.room?.sessionId === this.room?.state.playerX) {
+            return 'X';
+        } else {
+            return 'O';
+        }
+    }
+
+    getOthersMarker() {
+        if (this.room?.sessionId === this.room?.state.playerX) {
+            return 'O';
+        } else {
+            return 'X';
+        }
+    }
+
+    getVictor() {
+        switch (this.room?.state.victorSessionId) {
+            case '': {
+                return 'STILL_PLAYING';
+            }
+            case this.room?.sessionId: {
+                return 'YOU_WON';
+            }
+            default: {
+                return 'OPPONENT_WON';
+            }
+        }
     }
 
 }

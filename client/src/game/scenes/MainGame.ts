@@ -7,7 +7,9 @@ export default class MainGame extends Phaser.Scene {
 
     private server?: Server;
     private cellImages: Phaser.GameObjects.Image[] = [];
-    // private cellStates: Cell[] = [];
+
+    private titleText!: Phaser.GameObjects.Text;
+    private infoText!: Phaser.GameObjects.Text;
 
     constructor() {
         super('main-game');
@@ -15,7 +17,7 @@ export default class MainGame extends Phaser.Scene {
 
     preload() {
         this.load.image('cross', '/src/game/assets/cross.png');
-        this.load.image('circle', '/src/game/assets/cross.png');
+        this.load.image('circle', '/src/game/assets/circle.png');
     }
 
     async create(data: { server: Server }) {
@@ -30,7 +32,11 @@ export default class MainGame extends Phaser.Scene {
         await this.server.join();
 
         this.server.onceStateChanged(this.createBoard);
+        this.server.onceStateChanged(this.createGui);
+
         this.server.onStateChanged(this.updateBoard);
+        this.server.onStateChanged(this.updateGui);
+        this.server.onStateChanged(this.updateVictory);
     }
 
     private createBoard = (state: ITicTacToeState) => {
@@ -48,18 +54,30 @@ export default class MainGame extends Phaser.Scene {
                     this.server?.makeSelection(idx);
                 });
             const cellImage = this.add.image(x, y, 'cross');
-            cellImage.setDisplaySize(size*0.9, size*0.9);
+            cellImage.setDisplaySize(size * 0.9, size * 0.9);
             cellImage.setVisible(false);
             this.cellImages.push(cellImage);
-            // this.cellStates.push(Cell.Empty);
 
             x += size + spacing;
-            
-            if ((idx+1) % 3 === 0) {
-                y += size+spacing;
+
+            if ((idx + 1) % 3 === 0) {
+                y += size + spacing;
                 x = (width * 0.5) - size - spacing;
             }
         });
+    }
+
+    private createGui = (state: ITicTacToeState) => {
+        this.titleText = this.add.text(20, 20, "tic... tac... toe!", {
+            fontFamily: 'mono',
+            fontSize: '24px'
+        });
+
+        this.infoText = this.add.text(20, this.scale.height - 20, ">> your turn", {
+            fontFamily: 'mono',
+            fontSize: '20px'
+        });
+        this.infoText.setOrigin(0, 1);
     }
 
     private updateBoard = (state: ITicTacToeState) => {
@@ -81,5 +99,23 @@ export default class MainGame extends Phaser.Scene {
                 }
             }
         });
+    }
+
+    private updateGui = (state: ITicTacToeState) => {
+        if (this.server?.isMyTurn()) {
+            this.infoText.text = ">> your turn player " + this.server.getMyMarker();
+        } else {
+            this.infoText.text = ">> player " + this.server?.getOthersMarker() + "'s turn";
+        }
+    }
+
+    private updateVictory = (state: ITicTacToeState) => {
+        // check if someone won
+        const victor = this.server?.getVictor();
+        if (victor === 'YOU_WON') {
+            this.infoText.text = '>> You won! Refresh to play again'
+        } else if (victor === 'OPPONENT_WON') {
+            this.infoText.text = '>> Opponent won... refresh to play again';
+        }
     }
 }

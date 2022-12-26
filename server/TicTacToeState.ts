@@ -9,6 +9,18 @@ export default class TicTacToeState extends Schema implements ITicTacToeState {
     @type('number') 
     activePlayer = 0;
 
+    @type('string') 
+    lastMoveSessionId = '';
+
+    @type('string') 
+    playerX = '';
+
+    @type('string') 
+    playerO = '';
+
+    @type('string')
+    victorSessionId = '';
+
     constructor() {
         super();
 

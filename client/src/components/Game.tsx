@@ -13,8 +13,8 @@ const Game = () => {
         const gameConfig = {
             type: Phaser.AUTO,
             parent: "phaser-game",
-            width: 640,
-            height: 360,
+            width: 360,
+            height: 640,
             scene: [Bootstrap, MainGame]
         }
 
