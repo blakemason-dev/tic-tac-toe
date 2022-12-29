@@ -21,3 +21,5 @@ Clone, install and run the demo with the following:
     npm install
     npm run dev
 
+## Demo
+This game can be played at [www.tictactoe.blakemasondev.com](www.tictactoe.blakemasondev.com)

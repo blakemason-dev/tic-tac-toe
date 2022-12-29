@@ -27,6 +27,13 @@ export default class TicTacToe extends Room<TicTacToeState> {
         } else if (this.clients.length === 2) {
             this.state.playerO = client.sessionId;
             this.state.lastMoveSessionId = client.sessionId;   
+            this.broadcast('found-match', this.state);
+        }
+    }
+
+    onLeave(client: any) {
+        if (this.state.victorSessionId === '') {
+            this.broadcast('client-left', client.sessionId);
         }
     }
 }

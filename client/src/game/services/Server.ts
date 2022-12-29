@@ -13,24 +13,41 @@ export default class Server {
 
     private room?: Room<ITicTacToeState & Schema>;
 
-    constructor () {
-        this.client = new Client('ws://localhost:2567');
+    private foundMatch = false;
+
+    constructor() {
+        // this.client = new Client('ws://localhost:2567');
+        this.client = new Client('wss://server.tictactoe.blakemasondev.com');
     }
 
     async join() {
         this.room = await this.client.joinOrCreate<ITicTacToeState & Schema>('tic-tac-toe');
-        
-        this.room.onStateChange.once(state => {
-            this.eventEmitter.emit("once-state-changed", state);
-        });
-        
+
         this.room.onStateChange(state => {
             this.eventEmitter.emit("on-state-changed", state);
         });
 
-        this.room.onMessage('victory', (msg) => {
-
+        this.room.onMessage('found-match', (state) => {
+            this.foundMatch = true;
+            this.eventEmitter.emit('once-state-changed', state);
         });
+
+        this.room.onMessage('client-left', (sessionId) => {
+            this.eventEmitter.emit('opponent-disconnected');
+        });
+    }
+
+    leave() {
+        this.foundMatch = false;
+        this.room?.leave();
+    }
+
+    getState() {
+        return this.room?.state;
+    }
+
+    isFoundMatch() {
+        return this.foundMatch;
     }
 
     makeSelection(idx: number) {
@@ -39,12 +56,12 @@ export default class Server {
         this.room.send(Message.PlayerSelection, { index: idx })
     }
 
-    onceStateChanged(cb: (state: ITicTacToeState) => void) {
-        this.eventEmitter.once("once-state-changed", cb);
-    }
-
     onStateChanged(cb: (state: ITicTacToeState) => void) {
         this.eventEmitter.on("on-state-changed", cb);
+    }
+
+    onOpponentDisconnect(cb: (state: ITicTacToeState) => void) {
+        this.eventEmitter.on("opponent-disconnected", cb);
     }
 
     isMyTurn() {

@@ -3,12 +3,15 @@ import Server from "../services/Server";
 
 import ITicTacToeState, { Cell } from "../../../../types/ITicTacToeState";
 
+import crossImage from '../assets/cross.png';
+import circleImage from '../assets/circle.png';
+
 export default class MainGame extends Phaser.Scene {
 
     private server?: Server;
     private cellImages: Phaser.GameObjects.Image[] = [];
 
-    private titleText!: Phaser.GameObjects.Text;
+    // private titleText!: Phaser.GameObjects.Text;
     private infoText!: Phaser.GameObjects.Text;
 
     constructor() {
@@ -16,8 +19,8 @@ export default class MainGame extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('cross', '/src/game/assets/cross.png');
-        this.load.image('circle', '/src/game/assets/circle.png');
+        this.load.image('cross', crossImage);
+        this.load.image('circle', circleImage);
     }
 
     async create(data: { server: Server }) {
@@ -25,21 +28,29 @@ export default class MainGame extends Phaser.Scene {
 
         this.server = server;
 
-        if (!this.server) {
-            throw new Error('server instance missing');
-        }
-
-        await this.server.join();
-
-        this.server.onceStateChanged(this.createBoard);
-        this.server.onceStateChanged(this.createGui);
+        this.createBoard();
+        this.createGui();
 
         this.server.onStateChanged(this.updateBoard);
         this.server.onStateChanged(this.updateGui);
         this.server.onStateChanged(this.updateVictory);
+        this.server.onOpponentDisconnect(this.opponentDisconnect);
     }
 
-    private createBoard = (state: ITicTacToeState) => {
+    private opponentDisconnect = () => {
+        this.infoText.text = '>> Opponent left...';
+
+        this.server?.leave();
+        this.scene.pause('main-game');
+        this.scene.launch('end-match', {
+            server: this.server
+        });
+    }
+
+    private createBoard = () => {
+        const state = this.server?.getState();
+        if (!state) return;
+
         const { width, height } = this.scale;
         const size = 96;
         const spacing = 5;
@@ -67,17 +78,18 @@ export default class MainGame extends Phaser.Scene {
         });
     }
 
-    private createGui = (state: ITicTacToeState) => {
-        this.titleText = this.add.text(20, 20, "tic... tac... toe!", {
-            fontFamily: 'mono',
-            fontSize: '24px'
-        });
-
+    private createGui = () => {
         this.infoText = this.add.text(20, this.scale.height - 20, ">> your turn", {
             fontFamily: 'mono',
             fontSize: '20px'
         });
         this.infoText.setOrigin(0, 1);
+
+        if (this.server?.isMyTurn()) {
+            this.infoText.text = ">> your turn player " + this.server.getMyMarker();
+        } else {
+            this.infoText.text = ">> player " + this.server?.getOthersMarker() + "'s turn";
+        }
     }
 
     private updateBoard = (state: ITicTacToeState) => {
@@ -112,10 +124,18 @@ export default class MainGame extends Phaser.Scene {
     private updateVictory = (state: ITicTacToeState) => {
         // check if someone won
         const victor = this.server?.getVictor();
+        if (victor === 'STILL_PLAYING') return;
+
         if (victor === 'YOU_WON') {
-            this.infoText.text = '>> You won! Refresh to play again'
+            this.infoText.text = '>> You won!'
         } else if (victor === 'OPPONENT_WON') {
-            this.infoText.text = '>> Opponent won... refresh to play again';
-        }
+            this.infoText.text = '>> Opponent won...';
+        } 
+
+        this.server?.leave();
+        this.scene.pause('main-game');
+        this.scene.launch('end-match', {
+            server: this.server
+        });
     }
 }

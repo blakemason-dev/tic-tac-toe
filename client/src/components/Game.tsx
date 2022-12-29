@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import Bootstrap from "../game/scenes/Bootstrap";
+import EndMatch from "../game/scenes/EndMatch";
+import FindMatch from "../game/scenes/FindMatch";
 import MainGame from "../game/scenes/MainGame";
+import Title from "../game/scenes/Title";
 
 import './Game.css';
 
@@ -11,11 +13,11 @@ const Game = () => {
         if (gameInitialised.current) return; 
 
         const gameConfig = {
-            type: Phaser.AUTO,
+            type: Phaser.CANVAS,
             parent: "phaser-game",
             width: 360,
             height: 640,
-            scene: [Bootstrap, MainGame]
+            scene: [Title, FindMatch, MainGame, EndMatch]
         }
 
         new Phaser.Game(gameConfig);
